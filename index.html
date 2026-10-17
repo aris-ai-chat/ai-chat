@@ -428,7 +428,7 @@ async function sendMessage() {
     
     setTimeout(() => {
       removeTyping();
-      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
+      const url = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&enhance=true&model=flux&seed=${Date.now()}`;
       addImage(url);
       sendBtn.disabled = false;
     }, 15000);
