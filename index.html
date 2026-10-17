@@ -32,7 +32,6 @@
     overflow: hidden;
   }
 
-  /* ===== ШАПКА ===== */
   header {
     border-bottom: 1px solid var(--border);
     padding: 12px 24px;
@@ -96,7 +95,6 @@
 
   .icon-btn:hover { border-color: var(--accent); color: var(--accent); box-shadow: var(--glow); }
 
-  /* ===== ЧАТ ===== */
   #chat {
     flex: 1;
     overflow-y: auto;
@@ -205,7 +203,6 @@
     clear: both;
   }
 
-  /* Индикатор печати */
   .typing-dots { display: inline-flex; gap: 6px; align-items: center; padding: 8px 0; }
   .typing-dots span {
     width: 8px; height: 8px; border-radius: 50%; background: var(--accent);
@@ -219,7 +216,6 @@
     30% { transform: translateY(-8px); opacity: 1; }
   }
 
-  /* ===== ПОЛЕ ВВОДА ===== */
   .input-area {
     padding: 20px 24px 30px;
     background: var(--bg);
@@ -349,19 +345,34 @@ const modelSelect = document.getElementById('modelSelect');
 const clearBtn = document.getElementById('clearBtn');
 const welcomeEl = document.getElementById('welcome');
 
-let history = [];
+// ===== ЗАГРУЗКА ИСТОРИИ =====
+// Пытаемся достать историю из памяти браузера. Если там пусто, создаем пустой массив.
+let history = JSON.parse(localStorage.getItem('aris_chat_history')) || [];
+
+// Если история не пустая, восстанавливаем сообщения на экране
+if (history.length > 0) {
+  welcomeEl.style.display = 'none';
+  history.forEach(msg => {
+    renderMessage(msg.content, msg.role === 'user' ? 'user' : 'ai');
+  });
+}
+
+function saveHistory() {
+  localStorage.setItem('aris_chat_history', JSON.stringify(history));
+}
 
 clearBtn.onclick = () => {
   if (history.length === 0) return;
   if (!confirm('Очистить историю чата?')) return;
   history = [];
+  localStorage.removeItem('aris_chat_history'); // Удаляем из памяти
   messagesEl.innerHTML = '';
   messagesEl.appendChild(welcomeEl);
   welcomeEl.style.display = 'block';
 };
 
-function addMessage(text, role) {
-  if (welcomeEl.style.display !== 'none') welcomeEl.style.display = 'none';
+// Функция только для отрисовки (без сохранения)
+function renderMessage(text, role) {
   const div = document.createElement('div');
   div.className = 'msg ' + role;
   div.innerHTML = `
@@ -401,7 +412,12 @@ async function sendMessage() {
   const text = inputEl.value.trim();
   if (!text) return;
 
-  addMessage(text, 'user');
+  // Показываем и сохраняем сообщение пользователя
+  if (welcomeEl.style.display !== 'none') welcomeEl.style.display = 'none';
+  renderMessage(text, 'user');
+  history.push({ role: 'user', content: text });
+  saveHistory();
+
   inputEl.value = '';
   inputEl.style.height = 'auto';
   sendBtn.disabled = true;
@@ -416,12 +432,15 @@ async function sendMessage() {
     const answer = await res.text();
     
     removeTyping();
-    addMessage(answer, 'ai');
-    history.push({ role: 'user', content: text });
+    
+    // Показываем и сохраняем ответ ИИ
+    renderMessage(answer, 'ai');
     history.push({ role: 'assistant', content: answer });
+    saveHistory();
+    
   } catch (err) {
     removeTyping();
-    addMessage('⚠️ Ошибка соединения. Подождите минуту или смените модель вверху.', 'ai');
+    renderMessage('⚠️ Ошибка соединения. Подождите минуту или смените модель вверху.', 'ai');
   }
   
   sendBtn.disabled = false;
