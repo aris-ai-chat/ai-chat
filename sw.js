@@ -1,6 +1,6 @@
 self.addEventListener('install', (e) => {
   e.waitUntil(
-    caches.open('aris-store').then((cache) => cache.addAll([
+    caches.open('aris-store-v3')
       './',
       './index.html',
     ])),
