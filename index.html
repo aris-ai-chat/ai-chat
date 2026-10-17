@@ -1,15 +1,4 @@
 <!DOCTYPE html>
-<html lang="en">
-
-  <head>
-    <meta charset="UTF-8">
-    <title>Untitled</title>
-    
-
-  </head>
-    
-  <body>
-  <!DOCTYPE html>
 <html lang="ru">
 <head>
 <meta charset="UTF-8">
@@ -324,7 +313,7 @@
     <div class="welcome" id="welcome">
       <span class="big">🦆</span>
       <h2>Привет! Чем помочь?</h2>
-      <p>Бесплатный AI-чат. Без регистрации. Без сохранения истории.</p>
+      <p>Я умею отвечать на вопросы и рисовать картинки. Попробуй написать: «Нарисуй кота»!</p>
       <div class="privacy">🕶️ Приватно — история только в браузере</div>
     </div>
   </div>
@@ -332,7 +321,7 @@
 
 <div class="input-area">
   <div class="input-row">
-    <textarea id="input" placeholder="Задай вопрос..." rows="1"></textarea>
+    <textarea id="input" placeholder="Спроси или напиши: нарисуй кота..." rows="1"></textarea>
     <button id="send" title="Отправить">➤</button>
   </div>
   <div class="hint">AI может ошибаться. Проверяйте важную информацию.</div>
@@ -410,6 +399,51 @@ function addMessage(text, role, model = null) {
   return textEl;
 }
 
+// ===== ДОБАВЛЕНИЕ КАРТИНКИ =====
+function addImageMessage(imageUrl, prompt) {
+  if (welcomeEl.style.display !== 'none') welcomeEl.style.display = 'none';
+
+  const div = document.createElement('div');
+  div.className = 'msg ai';
+
+  const avatar = document.createElement('div');
+  avatar.className = 'avatar';
+  avatar.textContent = '🎨';
+
+  const content = document.createElement('div');
+  content.className = 'content';
+
+  const roleEl = document.createElement('div');
+  roleEl.className = 'role';
+  roleEl.textContent = 'AI · 🎨 Картинка';
+
+  const img = document.createElement('img');
+  img.src = imageUrl;
+  img.alt = prompt;
+  img.style.cssText = 'max-width: 100%; border-radius: 12px; margin-top: 8px; box-shadow: 0 4px 12px rgba(0,0,0,.15);';
+  img.onerror = () => {
+    img.remove();
+    const err = document.createElement('div');
+    err.textContent = '⚠️ Картинка не загрузилась. Попробуй ещё раз.';
+    err.style.cssText = 'color: #dc2626; margin-top: 8px;';
+    content.appendChild(err);
+  };
+
+  const downloadBtn = document.createElement('a');
+  downloadBtn.href = imageUrl;
+  downloadBtn.target = '_blank';
+  downloadBtn.textContent = '💾 Скачать';
+  downloadBtn.style.cssText = 'display: inline-block; margin-top: 8px; padding: 6px 14px; background: #de5833; color: #fff; border-radius: 8px; text-decoration: none; font-size: .82rem; font-weight: 600;';
+
+  content.appendChild(roleEl);
+  content.appendChild(img);
+  content.appendChild(downloadBtn);
+  div.appendChild(avatar);
+  div.appendChild(content);
+  messagesEl.appendChild(div);
+  chatEl.scrollTop = chatEl.scrollHeight;
+}
+
 function addTyping() {
   const div = document.createElement('div');
   div.className = 'msg ai';
@@ -480,6 +514,38 @@ async function sendMessage() {
   sendBtn.disabled = true;
   inputEl.disabled = true;
 
+  const lowerText = text.toLowerCase();
+
+  // ===== ПРОВЕРКА: ЗАПРОС КАРТИНКИ =====
+  const imageTriggers = ['нарисуй', 'сгенерируй картинку', 'покажи картинку', 'создай изображение', 'нарисуй мне'];
+  const isImageRequest = imageTriggers.some(t => lowerText.startsWith(t) || lowerText.includes(t));
+
+  if (isImageRequest) {
+    let prompt = text;
+    for (const trig of imageTriggers) {
+      prompt = prompt.replace(new RegExp(trig, 'gi'), '').trim();
+    }
+    if (!prompt) prompt = 'красивая картинка';
+
+    addTyping();
+    try {
+      const englishPrompt = encodeURIComponent(prompt + ', high quality, detailed, 4k');
+      const imageUrl = `https://image.pollinations.ai/prompt/${englishPrompt}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
+
+      removeTyping();
+      addImageMessage(imageUrl, prompt);
+      history.push({ role: 'assistant', content: `[Сгенерирована картинка: ${prompt}]` });
+    } catch (err) {
+      removeTyping();
+      addMessage('⚠️ Не удалось сгенерировать картинку. Попробуй ещё раз.', 'ai');
+    }
+    sendBtn.disabled = false;
+    inputEl.disabled = false;
+    inputEl.focus();
+    return;
+  }
+
+  // ===== ОБЫЧНЫЙ ТЕКСТОВЫЙ ОТВЕТ =====
   addTyping();
 
   try {
@@ -513,8 +579,4 @@ sendBtn.onclick = sendMessage;
 inputEl.focus();
 </script>
 </body>
-</html>
-    
-  </body>
-  
 </html>
