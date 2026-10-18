@@ -11,12 +11,11 @@
   * { box-sizing: border-box; margin: 0; padding: 0; }
 
   :root {
-    --bg: #000000;         /* Абсолютно черный фон */
-    --surface: #111111;    /* Темно-серые блоки */
+    --bg: #000000;         /* Абсолютно черный */
+    --surface: #111111;    /* Темно-серый для блоков */
     --text: #ffffff;       /* Белый текст */
     --text-muted: #888888; /* Серый текст */
     --border: #333333;     /* Границы */
-    --accent: #ffffff;     /* Белые акценты */
   }
 
   body {
@@ -53,8 +52,12 @@
     text-transform: uppercase;
   }
 
-  .logo .icon { 
-    font-size: 1.5rem; 
+  /* Стиль для твоей картинки в шапке */
+  .logo img { 
+    width: 32px; 
+    height: 32px; 
+    border-radius: 8px; 
+    object-fit: cover;
   }
   
   .logo span { color: var(--text); }
@@ -130,7 +133,6 @@
     color: var(--text);
     margin-bottom: 12px;
     font-weight: 700;
-    letter-spacing: 0.5px;
   }
 
   .welcome p { font-size: 1rem; line-height: 1.6; }
@@ -148,11 +150,9 @@
     border: 1px solid var(--border);
   }
 
+  /* Убрали свечение с аватарки ИИ */
   .msg.user .avatar { background: var(--surface); }
-  .msg.ai .avatar { 
-    background: var(--surface); 
-    border-color: var(--text); 
-  }
+  .msg.ai .avatar { background: var(--surface); }
 
   .msg .content { flex: 1; min-width: 0; padding-top: 6px; }
 
@@ -188,7 +188,7 @@
     clear: both;
   }
 
-  /* Индикатор печати */
+  /* Индикатор печати (без свечения) */
   .typing-dots { display: inline-flex; gap: 6px; align-items: center; padding: 8px 0; }
   .typing-dots span {
     width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);
@@ -223,6 +223,7 @@
     transition: all .3s;
   }
 
+  /* Убрали свечение при клике на поле ввода */
   .input-row:focus-within { 
     border-color: var(--text); 
   }
@@ -244,9 +245,10 @@
 
   #input::placeholder { color: #555; }
 
+  /* Кнопка отправки стала белой */
   #send {
-    background: var(--accent);
-    color: #000;
+    background: var(--text);
+    color: var(--bg);
     border: none;
     width: 44px;
     height: 44px;
@@ -262,7 +264,6 @@
 
   #send:hover:not(:disabled) { 
     background: #cccccc; 
-    transform: scale(1.05);
   }
   #send:disabled { opacity: .3; cursor: not-allowed; }
 
@@ -279,6 +280,7 @@
   @media (max-width: 600px) {
     header { padding: 10px 16px; }
     .logo { font-size: 1rem; }
+    .logo img { width: 28px; height: 28px; }
     select { font-size: .8rem; padding: 6px 8px; }
     #chat { padding: 16px; }
     .input-area { padding: 12px 16px 20px; }
@@ -290,7 +292,8 @@
 
 <header>
   <div class="logo">
-    <span class="icon">🤖</span>
+    <!-- Заменили робота на твою картинку -->
+    <img src="icon.png" alt="Aris">
     <span>Aris</span> Chat AI
   </div>
   <div class="controls">
@@ -440,7 +443,6 @@ inputEl.addEventListener('keydown', (e) => {
 sendBtn.onclick = sendMessage;
 inputEl.focus();
 
-// PWA (Service Worker)
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('sw.js').catch(err => console.log('PWA error', err));
