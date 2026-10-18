@@ -52,7 +52,6 @@
     text-transform: uppercase;
   }
 
-  /* Стиль для твоей картинки в шапке */
   .logo img { 
     width: 32px; 
     height: 32px; 
@@ -122,10 +121,15 @@
     margin: 0 auto;
   }
 
-  .welcome .big { 
-    font-size: 4rem; 
-    margin-bottom: 20px; 
-    display: block; 
+  /* Стили для картинки по центру */
+  .welcome img {
+    width: 100px;
+    height: 100px;
+    border-radius: 24px;
+    margin-bottom: 20px;
+    object-fit: cover;
+    display: inline-block;
+    border: 2px solid var(--border);
   }
 
   .welcome h2 {
@@ -150,7 +154,6 @@
     border: 1px solid var(--border);
   }
 
-  /* Убрали свечение с аватарки ИИ */
   .msg.user .avatar { background: var(--surface); }
   .msg.ai .avatar { background: var(--surface); }
 
@@ -188,7 +191,7 @@
     clear: both;
   }
 
-  /* Индикатор печати (без свечения) */
+  /* Индикатор печати */
   .typing-dots { display: inline-flex; gap: 6px; align-items: center; padding: 8px 0; }
   .typing-dots span {
     width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);
@@ -223,10 +226,7 @@
     transition: all .3s;
   }
 
-  /* Убрали свечение при клике на поле ввода */
-  .input-row:focus-within { 
-    border-color: var(--text); 
-  }
+  .input-row:focus-within { border-color: var(--text); }
 
   #input {
     flex: 1;
@@ -245,7 +245,6 @@
 
   #input::placeholder { color: #555; }
 
-  /* Кнопка отправки стала белой */
   #send {
     background: var(--text);
     color: var(--bg);
@@ -262,9 +261,7 @@
     font-weight: bold;
   }
 
-  #send:hover:not(:disabled) { 
-    background: #cccccc; 
-  }
+  #send:hover:not(:disabled) { background: #cccccc; }
   #send:disabled { opacity: .3; cursor: not-allowed; }
 
   .hint {
@@ -285,6 +282,7 @@
     #chat { padding: 16px; }
     .input-area { padding: 12px 16px 20px; }
     .msg .text { font-size: .9rem; }
+    .welcome img { width: 80px; height: 80px; }
   }
 </style>
 </head>
@@ -292,7 +290,6 @@
 
 <header>
   <div class="logo">
-    <!-- Заменили робота на твою картинку -->
     <img src="icon.png" alt="Aris">
     <span>Aris</span> Chat AI
   </div>
@@ -309,7 +306,8 @@
 <div id="chat">
   <div class="messages" id="messages">
     <div class="welcome" id="welcome">
-      <span class="big">🤖</span>
+      <!-- Заменили робота на твою картинку -->
+      <img src="icon.png" alt="Aris">
       <h2>Добро пожаловать в Aris Chat AI</h2>
       <p>Ваш персональный ИИ-ассистент. Задайте любой вопрос, попросите написать текст, код или перевести что-нибудь.</p>
     </div>
