@@ -88,6 +88,7 @@
     display: grid;
     place-items: center;
     transition: all .2s;
+    flex-shrink: 0;
   }
 
   .swap-btn:hover { border-color: var(--text); background: #1a1a1a; }
@@ -180,10 +181,15 @@
   .translate-btn:hover:not(:disabled) { background: #cccccc; }
   .translate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
 
+  /* ИСПРАВЛЕНИЕ ДЛЯ ТЕЛЕФОНОВ */
   @media (max-width: 700px) {
     .translator-box { flex-direction: column; }
-    .lang-selector { flex-direction: column; }
-    .swap-btn { transform: rotate(90deg); width: 100%; }
+    .lang-selector { flex-direction: column; gap: 15px; }
+    .swap-btn { 
+      transform: rotate(90deg); 
+      margin: 0 auto; 
+      width: 48px; /* Кнопка больше не растягивается */
+    }
   }
 </style>
 </head>
@@ -276,12 +282,11 @@ async function translate() {
   let from = sourceLang.value;
   const to = targetLang.value;
 
-  // УМНОЕ ОПРЕДЕЛЕНИЕ ЯЗЫКА (ИСПРАВЛЕНИЕ ОШИБКИ 'AUTO')
   if (from === 'auto') {
     if (/[а-яА-ЯёЁ]/.test(text)) {
-      from = 'ru'; // Если есть русские буквы (кириллица)
+      from = 'ru';
     } else {
-      from = 'en'; // Иначе считаем, что английский
+      from = 'en';
     }
   }
 
@@ -342,11 +347,404 @@ copyBtn.onclick = () => {
   setTimeout(() => copyBtn.textContent = '📋', 1500);
 };
 
+// ИСПРАВЛЕННАЯ ОЗВУЧКА (TTS)
 listenBtn.onclick = () => {
   const textToSpeak = outputText.textContent;
-  if (!textToSpeak || textToSpeak === 'Здесь появится перевод...') return;
+  if (!textToSpeak || textToSpeak === 'Здесь появится перевод...' || textToSpeak === 'Загрузка...') return;
+
+  // Останавливаем предыдущую озвучку (чтобы на телефоне не зависало)
+  window.speechSynthesis.cancel();
+
   const utterance = new SpeechSynthesisUtterance(textToSpeak);
-  utterance.lang = targetLang.value === 'ru' ? 'ru-RU' : targetLang.value;
+  
+  // Правильная карта языков для мобильных телефонов
+  const langMap = {
+    'ru': 'ru-RU', 'en': 'en-US', 'es': 'es-ES', 'de': 'de-DE',
+    'fr': 'fr-FR', 'zh': 'zh-CN', 'ja': 'ja-JP', 'tr': 'tr-TR', 'kk': 'kk-KZ'
+  };
+  
+  utterance.lang = langMap[targetLang.value] || 'en-US';
+  utterance.rate = 0.9; // Немного медленнее для лучшего восприятия
+  
+  window.speechSynthesis.speak(utterance);
+};
+
+inputText.addEventListener('keydown', (e) => {
+  if (e.key === 'Enter' && e.ctrlKey) {
+    e.preventDefault();
+    translate();
+  }
+});
+</script>
+</body>
+</html><!DOCTYPE html>
+<html lang="ru" data-theme="dark">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Переводчик — Aris Translate</title>
+<link rel="manifest" href="manifest-translate.json">
+<link rel="icon" type="image/png" href="icon.png">
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #000000;
+    --surface: #111111;
+    --text: #ffffff;
+    --text-muted: #888888;
+    --border: #333333;
+  }
+
+  body {
+    font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 20px;
+  }
+
+  header {
+    width: 100%;
+    max-width: 900px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    padding-bottom: 15px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .logo {
+    font-size: 1.4rem;
+    font-weight: 800;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .logo span { color: var(--text-muted); }
+
+  .lang-selector {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    width: 100%;
+    max-width: 900px;
+    margin-bottom: 20px;
+  }
+
+  select {
+    flex: 1;
+    padding: 12px 15px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--text);
+    font-size: 1rem;
+    cursor: pointer;
+    outline: none;
+    appearance: none;
+    transition: border-color .2s;
+  }
+
+  select:focus, select:hover { border-color: var(--text); }
+
+  .swap-btn {
+    background: var(--surface);
+    color: var(--text);
+    border: 1px solid var(--border);
+    width: 48px;
+    height: 48px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.2rem;
+    display: grid;
+    place-items: center;
+    transition: all .2s;
+    flex-shrink: 0;
+  }
+
+  .swap-btn:hover { border-color: var(--text); background: #1a1a1a; }
+
+  .translator-box {
+    display: flex;
+    gap: 15px;
+    width: 100%;
+    max-width: 900px;
+    flex-direction: row;
+  }
+
+  .box {
+    flex: 1;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    position: relative;
+    min-height: 300px;
+  }
+
+  textarea {
+    flex: 1;
+    width: 100%;
+    background: transparent;
+    border: none;
+    color: var(--text);
+    font-size: 1.1rem;
+    line-height: 1.5;
+    resize: none;
+    outline: none;
+    font-family: inherit;
+  }
+
+  textarea::placeholder { color: #444; }
+
+  .output-text {
+    flex: 1;
+    font-size: 1.1rem;
+    line-height: 1.5;
+    color: var(--text);
+    word-wrap: break-word;
+  }
+
+  .action-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 15px;
+  }
+
+  .icon-actions {
+    display: flex;
+    gap: 10px;
+  }
+
+  .action-btn {
+    background: transparent;
+    color: var(--text);
+    border: 1px solid var(--border);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 1.1rem;
+    display: grid;
+    place-items: center;
+    transition: all .2s;
+  }
+
+  .action-btn:hover { border-color: var(--text); background: #1a1a1a; }
+
+  .translate-btn {
+    background: var(--text);
+    color: var(--bg);
+    border: none;
+    padding: 12px 30px;
+    border-radius: 8px;
+    font-size: 1rem;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all .2s;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+  }
+
+  .translate-btn:hover:not(:disabled) { background: #cccccc; }
+  .translate-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+  /* ИСПРАВЛЕНИЕ ДЛЯ ТЕЛЕФОНОВ */
+  @media (max-width: 700px) {
+    .translator-box { flex-direction: column; }
+    .lang-selector { flex-direction: column; gap: 15px; }
+    .swap-btn { 
+      transform: rotate(90deg); 
+      margin: 0 auto; 
+      width: 48px; /* Кнопка больше не растягивается */
+    }
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">
+    <span>🌍</span> Aris <span>Translate</span>
+  </div>
+</header>
+
+<div class="lang-selector">
+  <select id="sourceLang">
+    <option value="auto">🌐 Определить язык</option>
+    <option value="ru">🇷🇺 Русский</option>
+    <option value="en">🇬🇧 Английский</option>
+    <option value="es">🇪🇸 Испанский</option>
+    <option value="de">🇩🇪 Немецкий</option>
+    <option value="fr">🇫🇷 Французский</option>
+    <option value="zh">🇨🇳 Китайский</option>
+    <option value="ja">🇯🇵 Японский</option>
+    <option value="tr">🇹🇷 Турецкий</option>
+    <option value="kk">🇰🇿 Казахский</option>
+  </select>
+
+  <button class="swap-btn" id="swapBtn" title="Поменять языки">⇄</button>
+
+  <select id="targetLang">
+    <option value="en">🇬🇧 Английский</option>
+    <option value="ru">🇷🇺 Русский</option>
+    <option value="es">🇪🇸 Испанский</option>
+    <option value="de">🇩🇪 Немецкий</option>
+    <option value="fr">🇫🇷 Французский</option>
+    <option value="zh">🇨🇳 Китайский</option>
+    <option value="ja">🇯🇵 Японский</option>
+    <option value="tr">🇹🇷 Турецкий</option>
+    <option value="kk">🇰🇿 Казахский</option>
+  </select>
+</div>
+
+<div class="translator-box">
+  <div class="box">
+    <textarea id="inputText" placeholder="Введите текст для перевода..."></textarea>
+    <div class="action-bar">
+      <div class="icon-actions">
+        <button class="action-btn" id="clearBtn" title="Очистить">🗑️</button>
+      </div>
+      <button class="translate-btn" id="translateBtn">Перевести</button>
+    </div>
+  </div>
+
+  <div class="box">
+    <div class="output-text" id="outputText" style="color: var(--text-muted);">Здесь появится перевод...</div>
+    <div class="action-bar">
+      <div class="icon-actions">
+        <button class="action-btn" id="listenBtn" title="Прослушать">🔊</button>
+        <button class="action-btn" id="copyBtn" title="Скопировать">📋</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const inputText = document.getElementById('inputText');
+const outputText = document.getElementById('outputText');
+const sourceLang = document.getElementById('sourceLang');
+const targetLang = document.getElementById('targetLang');
+const translateBtn = document.getElementById('translateBtn');
+const swapBtn = document.getElementById('swapBtn');
+const clearBtn = document.getElementById('clearBtn');
+const copyBtn = document.getElementById('copyBtn');
+const listenBtn = document.getElementById('listenBtn');
+
+// Восстанавливаем последний перевод
+if (localStorage.getItem('last_translate')) {
+  inputText.value = localStorage.getItem('last_input') || '';
+  outputText.textContent = localStorage.getItem('last_translate');
+  outputText.style.color = 'var(--text)';
+}
+
+async function translate() {
+  const text = inputText.value.trim();
+  if (!text) return;
+
+  translateBtn.disabled = true;
+  translateBtn.textContent = 'Переводим...';
+  outputText.textContent = 'Загрузка...';
+  outputText.style.color = 'var(--text-muted)';
+
+  let from = sourceLang.value;
+  const to = targetLang.value;
+
+  if (from === 'auto') {
+    if (/[а-яА-ЯёЁ]/.test(text)) {
+      from = 'ru';
+    } else {
+      from = 'en';
+    }
+  }
+
+  try {
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${from}|${to}`;
+    const res = await fetch(url);
+    const data = await res.json();
+
+    if (data.responseData && data.responseData.translatedText) {
+      let result = data.responseData.translatedText;
+      
+      if (result.includes('MYMEMORY WARNING')) {
+        result = '⚠️ Лимит бесплатных переводов на сегодня исчерпан. Попробуйте завтра.';
+        outputText.style.color = '#ef4444';
+      } else {
+        outputText.style.color = 'var(--text)';
+      }
+
+      outputText.textContent = result;
+      localStorage.setItem('last_translate', result);
+      localStorage.setItem('last_input', text);
+    } else {
+      throw new Error('Не удалось перевести');
+    }
+  } catch (err) {
+    outputText.textContent = '⚠️ Ошибка соединения. Попробуйте ещё раз.';
+    outputText.style.color = '#ef4444';
+  }
+
+  translateBtn.disabled = false;
+  translateBtn.textContent = 'Перевести';
+}
+
+translateBtn.onclick = translate;
+
+clearBtn.onclick = () => {
+  inputText.value = '';
+  outputText.textContent = 'Здесь появится перевод...';
+  outputText.style.color = 'var(--text-muted)';
+  localStorage.removeItem('last_translate');
+  localStorage.removeItem('last_input');
+};
+
+swapBtn.onclick = () => {
+  const temp = sourceLang.value;
+  sourceLang.value = targetLang.value;
+  targetLang.value = temp;
+
+  const tempText = inputText.value;
+  inputText.value = outputText.textContent === 'Здесь появится перевод...' ? '' : outputText.textContent;
+  outputText.textContent = tempText || 'Здесь появится перевод...';
+};
+
+copyBtn.onclick = () => {
+  if (outputText.textContent === 'Здесь появится перевод...' || outputText.textContent === 'Загрузка...') return;
+  navigator.clipboard.writeText(outputText.textContent);
+  copyBtn.textContent = '✅';
+  setTimeout(() => copyBtn.textContent = '📋', 1500);
+};
+
+// ИСПРАВЛЕННАЯ ОЗВУЧКА (TTS)
+listenBtn.onclick = () => {
+  const textToSpeak = outputText.textContent;
+  if (!textToSpeak || textToSpeak === 'Здесь появится перевод...' || textToSpeak === 'Загрузка...') return;
+
+  // Останавливаем предыдущую озвучку (чтобы на телефоне не зависало)
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(textToSpeak);
+  
+  // Правильная карта языков для мобильных телефонов
+  const langMap = {
+    'ru': 'ru-RU', 'en': 'en-US', 'es': 'es-ES', 'de': 'de-DE',
+    'fr': 'fr-FR', 'zh': 'zh-CN', 'ja': 'ja-JP', 'tr': 'tr-TR', 'kk': 'kk-KZ'
+  };
+  
+  utterance.lang = langMap[targetLang.value] || 'en-US';
+  utterance.rate = 0.9; // Немного медленнее для лучшего восприятия
+  
   window.speechSynthesis.speak(utterance);
 };
 
