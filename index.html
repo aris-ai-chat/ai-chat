@@ -28,7 +28,6 @@
     overflow: hidden;
   }
 
-  /* ===== ШАПКА ===== */
   header {
     border-bottom: 1px solid var(--border);
     padding: 12px 24px;
@@ -87,7 +86,6 @@
 
   .icon-btn:hover { border-color: var(--text); background: #1a1a1a; }
 
-  /* ===== ЧАТ ===== */
   #chat {
     flex: 1;
     overflow-y: auto;
@@ -189,7 +187,6 @@
     clear: both;
   }
 
-  /* Стили для картинок в чате */
   .msg .image-box {
     margin-top: 10px;
     border-radius: 12px;
@@ -215,7 +212,6 @@
     font-weight: bold;
   }
 
-  /* Индикатор печати */
   .typing-dots { display: inline-flex; gap: 6px; align-items: center; padding: 8px 0; }
   .typing-dots span {
     width: 8px; height: 8px; border-radius: 50%; background: var(--text-muted);
@@ -229,7 +225,6 @@
     30% { transform: translateY(-8px); opacity: 1; }
   }
 
-  /* ===== ПОЛЕ ВВОДА ===== */
   .input-area {
     padding: 20px 24px 30px;
     background: var(--bg);
@@ -381,7 +376,6 @@ clearBtn.onclick = () => {
   welcomeEl.style.display = 'block';
 };
 
-// Отрисовка текста
 function renderMessage(text, role) {
   const div = document.createElement('div');
   div.className = 'msg ' + role;
@@ -396,7 +390,6 @@ function renderMessage(text, role) {
   chatEl.scrollTop = chatEl.scrollHeight;
 }
 
-// Отрисовка картинки
 function renderImage(url) {
   const div = document.createElement('div');
   div.className = 'msg ai';
@@ -451,8 +444,9 @@ async function sendMessage() {
 
   const lowerText = text.toLowerCase();
   
-  // ===== ПРОВЕРКА НА ГЕНЕРАЦИЮ КАРТИНКИ =====
-  const imageTriggers = ['нарисуй', 'сгенерируй картинку', 'покажи картинку', 'создай изображение'];
+  // ===== ПРОВЕРКА НА ГЕНЕРАЦИЮ КАРТИНКИ (ЖЕСТКИЙ ПЕРЕХВАТ) =====
+  const imageTriggers = ['нарисуй', 'сгенерируй картинку', 'покажи картинку', 'создай изображение', 'хочу картинку', 'сгенерируй фото', 'картинку', 'нарисуй мне'];
+  
   const isImageRequest = imageTriggers.some(t => lowerText.includes(t));
 
   if (isImageRequest) {
@@ -464,6 +458,7 @@ async function sendMessage() {
 
     addTyping('Генерирую картинку (подожди ~15 сек)...');
     
+    // Принудительная задержка, чтобы картинка успела сгенерироваться
     setTimeout(() => {
       removeTyping();
       const imageUrl = `https://image.pollinations.ai/prompt/${encodeURIComponent(prompt)}?width=1024&height=1024&nologo=true&seed=${Date.now()}`;
@@ -474,8 +469,9 @@ async function sendMessage() {
       
       sendBtn.disabled = false;
       inputEl.focus();
-    }, 5000); // Небольшая задержка, чтобы показать "печатает"
-    return;
+    }, 5000);
+    
+    return; // ОЧЕНЬ ВАЖНО: останавливаем функцию, чтобы не идти в текстовую модель
   }
 
   // ===== ОБЫЧНЫЙ ТЕКСТОВЫЙ ОТВЕТ =====
